@@ -1,0 +1,63 @@
+Tests is a lightweight testing framework for commandline applications. It has a
+simple syntax oriented at making tests easy to write. It is inspired by
+docutils, but extends beyond simply python. It was originally created to test
+oranj.
+
+= SYNTAX =
+Tests parses your test files line-by-line. It recognizes five types of lines.
+
+== Comments ==
+Lines that begin with "##" are comments to Tests. It discards these lines. Eg.
+
+## Test looping constructs
+
+== Tools Declarations ==
+Lines beginning wth "#!" are tool declarations. These are specifically
+structured to look like bash shebang lines. All tests following a tool
+declaration will use that tool (until a new tool is declared). Eg.
+
+#!python
+
+Tool declarations are simply command lines, and can thus include arguments.
+This is especially useful for tests a tool like python, which requires a
+separate argument for it to read from stdin without prompts of any sort.
+
+Again, tool declarations carry through all future tests (until the next tool
+declaration). However, the tool is restarted for each test.
+
+== Descriptions ==
+Lines that begin with "# " (yes, the space is required) describe the next test.
+They can be multiple lines long (each prefixed with "# ", of course) but may
+not come after the input lines.
+
+== Input lines ==
+Lines that begin with ">>> " (yes, the space is required) denote input passed
+to the tool. This is passed through a pipe, so make sure that the tool reads
+directly from stdin without prompts.
+
+== Output lines ==
+All other lines are output lines. Note that blank lines are ignored, thus your
+output cannot have blank lines. On the other hand, this frees you to separate
+test cases by whitespace.
+
+Note that output MUST BE SENT TO stdout. This may require you to use print
+statements or the equivalent.
+
+The lines must be in the order given here. Otherwise, you will be unwittingly
+adding test cases.
+
+= EXAMPLE =
+
+#!python
+
+## Test array subscripting opperations
+
+# Basic indexing
+>>> a = [0, 1, 2]
+>>> print a[0]
+0
+
+# Slicing
+>>> a = [0, 1, 2]
+>>> print a[0:2]
+[0, 1]
