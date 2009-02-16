@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys
+import sys, os
 import subprocess
 
 class Test(object):
@@ -23,6 +23,7 @@ class Test(object):
 
         if out.strip() == self.output:
             print ".", self.desc
+            return True
         else:
             print "F", self.desc
             print "===== Output: ====="
@@ -30,6 +31,7 @@ class Test(object):
             print "===== Error: ======"
             print err.strip()
             print "==================="
+            return False
 
 def parsetests(strtests):
     tests = []
@@ -64,14 +66,44 @@ def parsetests(strtests):
     return tests
 
 def run(l):
+    tot = 0
+    failed = 0
+    
     for test in l:
         test.trim()
-        test.run()
+        
+        tot += 1
+        if not test.run(): failed += 1
+
+    tot -= 1
+    failed -= 1
+    
+    print "Failed %d out of %d" % (failed, tot)
+
+    return failed
 
 def run_file(f):
-    f = open(f)
-    run(parsetests(f.read()))
+    if os.path.isdir(f):
+        t = []
+        for i in filter(os.path.isfile, map(lambda x: os.path.join(f, x), os.listdir(f))):
+            r = run_file(i)
+            if r > 0:
+                t.append((i, r))
+
+        sum = 0
+        for i in t:
+            sum += i[1]
+
+        print
+        print sum, "total failures"
+        for i in t:
+            print "Failed %d tests in %s" % (i[1], i[0])
         
+        return t
+    else:
+        f = open(f)
+        return run(parsetests(f.read()))
+
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         try:
