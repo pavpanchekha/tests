@@ -16,21 +16,25 @@ class Test(object):
         self.output = self.output.strip()
         self.tool = self.tool.strip()
 
-    def run(self):
+    def run(self, quiet=False):
         if not self.input: return
         cmd = subprocess.Popen(self.tool.split(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = cmd.communicate(self.input)
 
         if out.strip() == self.output:
-            print ".", self.desc
+            if not quiet:
+                print ".", self.desc
+            
             return True
         else:
-            print "F", self.desc
-            print "===== Output: ====="
-            print out.strip()
-            print "===== Error: ======"
-            print err.strip()
-            print "==================="
+            if not quiet:
+                print "F", self.desc
+                print "===== Output: ====="
+                print out.strip()
+                print "===== Error: ======"
+                print err.strip()
+                print "==================="
+            
             return False
 
 def parsetests(strtests):
@@ -65,7 +69,7 @@ def parsetests(strtests):
     tests.append(curr)
     return tests
 
-def run(l):
+def run(l, quiet=False):
     tot = 0
     failed = 0
     
@@ -73,20 +77,24 @@ def run(l):
         test.trim()
         
         tot += 1
-        if not test.run(): failed += 1
+        if not test.run(quiet): failed += 1
 
     tot -= 1
     failed -= 1
-    
-    print "Failed %d out of %d" % (failed, tot)
 
-    return failed
+    if not quiet:
+        print "Failed %d out of %d" % (failed, tot)
 
-def run_file(f):
+    return (tot, failed)
+
+def run_file(f, quiet=False):
     if os.path.isdir(f):
         t = []
-        for i in filter(os.path.isfile, map(lambda x: os.path.join(f, x), os.listdir(f))):
-            r = run_file(i)
+        tot = 0
+        os.chdir(f)
+        for i in filter(os.path.isfile, os.listdir(".")):
+            tt, r = run_file(i, True)
+            tot += tt
             if r > 0:
                 t.append((i, r))
 
@@ -94,15 +102,16 @@ def run_file(f):
         for i in t:
             sum += i[1]
 
-        print
-        print sum, "total failures"
-        for i in t:
-            print "Failed %d tests in %s" % (i[1], i[0])
+        print "Failed %d out of %d" % (sum, tot)
+
+        if not quiet:
+            for i in t:
+                print "Failed %d tests in %s" % (i[1], i[0])
         
         return t
     else:
         f = open(f)
-        return run(parsetests(f.read()))
+        return run(parsetests(f.read()), quiet)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
