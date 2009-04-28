@@ -67,7 +67,7 @@ def parsetests(strtests, deftool="python"):
         elif s[:2] == "##":
             continue
         elif s[:2] == "# ":
-            if curr.tests[-1][1]:
+            if curr.tests[-1][0]:
                 tests.append(curr)
                 curr = Test(desc=s[2:].strip(), tool=curr.tool)
             else:
